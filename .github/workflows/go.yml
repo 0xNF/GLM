@@ -10,7 +10,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
 
     - name: Set up Go 1.x
@@ -31,7 +31,13 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v ./src/cmd/main.go
+      run: go build -o glm.exe -v ./src/cmd/main.go
 
     - name: Test
       run: go test -v ./test/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: glm.exe
+        path: glm.exe
