@@ -19,13 +19,17 @@ Because the ConfigAccessDebug logs are so heavy, we can't keep too many of them 
 	SaveTo      = "/save/to/this/folder"
 
 [Email]
-	User       = email@localhost
-	Password   = YourPassword
-	SmtpServer = smtp.localhost:443
+	User       = "User"
+	SenderAddress = "glm@glm.invalid"
+	RecipientAddress = "webmaster@fixme.invald"
+	Password   = "YourPassword"
+	SmtpServer = "mail.fixme.invalid:465"
 
 [Slack]
 	Token   = YourSlackToken
 	Channel = `#you`
+
+
 ```
 # Installation
 
