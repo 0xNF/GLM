@@ -28,6 +28,7 @@ Because the ConfigAccessDebug logs are so heavy, we can't keep too many of them 
 
 [Slack]
 	Token   = YourSlackToken
+	Channel = `#your_channel`
 ```
 # Installation
 
