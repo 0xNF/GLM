@@ -1,13 +1,8 @@
 package fsops
 
 import (
-	"fmt"
 	"os"
 )
-
-func Fsops() {
-	fmt.Printf("fsops lol")
-}
 
 // CheckExists checks whether the given `path` exists
 func CheckExists(path string) (bool, error) {
@@ -15,7 +10,6 @@ func CheckExists(path string) (bool, error) {
 		return true, nil
 	} else if os.IsNotExist(err) {
 		return false, nil
-
 	} else {
 		return false, err
 	}

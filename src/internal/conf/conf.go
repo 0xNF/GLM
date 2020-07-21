@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"github.com/0xNF/glm/src/internal/fsops"
+	fsops "github.com/0xNF/glm/src/internal/fsops"
 	"gopkg.in/ini.v1"
 )
 
@@ -22,9 +22,10 @@ type GLMSlack struct {
 	Channel string
 }
 type GLMTrigger struct {
-	TriggerFile string
-	SavePattern string
-	SaveTo      string
+	TriggerFile    string
+	SaveFromFolder string
+	SavePattern    string
+	SaveTo         string
 }
 
 // Checks whether the local config file exists
@@ -38,12 +39,14 @@ func MakeDefaultConfigFile() (*GLMConfig, error) {
 
 	/* write the GLM Trigger section */
 	trigger := &GLMTrigger{
-		TriggerFile: "/your/trigger/file.txt",
-		SavePattern: "/save/this/[file(.*)regex]",
-		SaveTo:      "/save/to/this/folder",
+		TriggerFile:    "/your/trigger/file.txt",
+		SaveFromFolder: "/save/this/folder/",
+		SavePattern:    "[file(.*)regex]",
+		SaveTo:         "/save/to/this/folder",
 	}
 
 	cfg.Section("Trigger").Key("TriggerFile").SetValue(trigger.TriggerFile)
+	cfg.Section("Trigger").Key("SaveFromFolder").SetValue(trigger.SaveFromFolder)
 	cfg.Section("Trigger").Key("SavePattern").SetValue(trigger.SavePattern)
 	cfg.Section("Trigger").Key("SaveTo").SetValue(trigger.SaveTo)
 
@@ -86,7 +89,7 @@ func MakeDefaultConfigFile() (*GLMConfig, error) {
 func ReadConfigFile() (*GLMConfig, error) {
 
 	/* load Config from disk */
-	inif, err := ini.Load(&ini.LoadOptions{
+	inif, err := ini.LoadSources(ini.LoadOptions{
 		SkipUnrecognizableLines: true,
 	}, iniLoc)
 
@@ -97,9 +100,10 @@ func ReadConfigFile() (*GLMConfig, error) {
 	/* load Trigger Section */
 	triggerSec := inif.Section("Trigger")
 	trigger := &GLMTrigger{
-		TriggerFile: triggerSec.Key("TriggerFile").String(),
-		SavePattern: triggerSec.Key("SavePatterm").String(),
-		SaveTo:      triggerSec.Key("SaveTo").String(),
+		TriggerFile:    triggerSec.Key("TriggerFile").String(),
+		SaveFromFolder: triggerSec.Key("SaveFromFolder").String(),
+		SavePattern:    triggerSec.Key("SavePattern").String(),
+		SaveTo:         triggerSec.Key("SaveTo").String(),
 	}
 
 	/* load Email Section */

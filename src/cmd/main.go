@@ -3,12 +3,34 @@ package main
 import (
 	"fmt"
 	"log"
-
+	"os"
 	conf "github.com/0xNF/glm/src/internal/conf"
+	monitor "github.com/0xNF/glm/src/internal/monitor"
+	notify "github.com/0xNF/glm/src/internal/notify"
 )
 
 func main() {
 	config := checkLoadConfig()
+	for _, trigger := range config.Triggers {
+		moved, err := monitor.Monitor(&trigger)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !moved {
+			/* system executed fine, but nothing trigger wasnt detected, so just deleted some files */
+			log.Println(fmt.Sprintf("glm finished executing. No trigger (%s) was found. Any matching files were deleted.", trigger.TriggerFile))
+		} else {
+			/* send notifications to the administrator */
+			log.Println(fmt.Sprintf("Trigger file (%s) was found. Moved affected files to safe loc (%s). Notifying administrator.", trigger.TriggerFile, trigger.SaveTo))
+			str := fmt.Sprintf("Trigger file (%s) was found. Moved affected files to safe location (%s).", trigger.TriggerFile, trigger.SaveTo)
+			
+			/* check if Slack is defined */
+			err = notify.SendSlack("x", "y", str)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to send to slack: %s", err))
+			}
+		}
+	}
 }
 
 func checkLoadConfig() *conf.GLMConfig {

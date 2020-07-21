@@ -1,0 +1,84 @@
+package notify
+
+import (
+	"bytes"
+	"errors"
+	"encoding/json"
+	"net/http"
+	"os"
+	"io/ioutil"
+	"strings"
+	"time"
+)
+
+
+// validate checks that the slack function can be properly executed
+func validate(token string, channel string, msg string) error {
+	if len(token) == 0 {
+		return errors.New("Slack Token must not be empty")
+	}
+	if len(channel) == 0 {
+		return errors.New("Slack Channel must not be empty")
+	}
+	if len(msg) == 0 {
+		return errors.New("Slack message must not be empty")
+	}
+	return nil
+}
+
+type Slack struct {
+	Token   string `json:"-"`
+	Channel string `json:"channel"`
+	Text    string `json:"text"`
+	Timeout int64  `json:"-"`
+}
+const slackApIURL = "https://slack.com/api/chat.postMessage"
+
+
+// SendSlack sends a notification using the specified settings.
+// Returns an error if things go wrong.
+func SendSlack(token string, channel string, msg string) error {
+	if err := validate(token, channel, msg); err != nil {
+		return err
+	}
+
+	sl := &Slack{
+		Token: token,
+		Channel: channel,
+		Text: msg,
+		Timeout: 30,
+	}
+	jobj, err := json.Marshal(sl)
+	if err != nil {
+		return err
+	}
+	os.Stdout.Write(jobj)
+	req, err := http.NewRequest("POST", slackApIURL, bytes.NewBuffer(jobj))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{
+		Timeout: time.Duration(time.Duration(30) * time.Second),
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	resBody := string(bodyBytes)
+	if res.StatusCode != http.StatusOK {
+		return errors.New(string(res.StatusCode))
+	}
+	if strings.Contains(resBody, "\"ok\":false") {
+		return errors.New(resBody)
+	}
+	defer res.Body.Close()
+
+	return nil
+}
