@@ -13,9 +13,10 @@ Because the ConfigAccessDebug logs are so heavy, we can't keep too many of them 
 ## Configuration
 ```ini
 [Trigger]
-	TriggerFile = /your/trigger/file.txt
-	SavePattern = /save/this/[file(.*)regex]
-	SaveTo      = /save/to/this/folder
+	TriggerFile = "/your/trigger/file.txt"
+	SaveFromFolder = "/folder/to/preserve/from"
+	SavePattern = "keep[this|that]-regex.*.txt"
+	SaveTo      = "/save/to/this/folder"
 
 [Email]
 	User       = email@localhost
