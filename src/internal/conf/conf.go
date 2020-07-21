@@ -17,6 +17,8 @@ type GLMConfig struct {
 }
 type GLMEmail struct {
 	User       string
+	SenderAddress string
+	RecipientAddress string
 	Password   string
 	SmtpServer string
 }
@@ -60,6 +62,8 @@ func MakeDefaultConfigFile() (*GLMConfig, error) {
 		SmtpServer: "smtp.localhost:443",
 	}
 	cfg.Section("Email").Key("User").SetValue(email.User)
+	cfg.Section("Email").Key("SenderAddress").SetValue(email.SenderAddress)
+	cfg.Section("Email").Key("RecipientAddress").SetValue(email.RecipientAddress)
 	cfg.Section("Email").Key("Password").SetValue(email.Password)
 	cfg.Section("Email").Key("SmtpServer").SetValue(email.SmtpServer)
 
@@ -126,11 +130,12 @@ func ReadConfigFile() (*GLMConfig, error) {
 			User:       emailSec.Key("User").String(),
 			Password:   emailSec.Key("Password").String(),
 			SmtpServer: emailSec.Key("SmtpServer").String(),
+			SenderAddress: emailSec.Key("SenderAddress").String(),
+			RecipientAddress: emailSec.Key("RecipientAddress").String(),
 		}
 		conf.Email = *email
 		conf.HasEmail = true
 	}
-
 
 	/* Load Slack Section */
 	slackSec, err := inif.GetSection("Slack")

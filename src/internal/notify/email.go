@@ -1,77 +1,92 @@
 package notify
 
 import (
-	"bytes"
-	"errors"
-	"encoding/json"
-	"net/http"
-	"os"
-	"io/ioutil"
-	"strings"
-	"time"
+	"net"
+    "net/mail"
+	  "net/smtp"
+	"crypto/tls"
+	"fmt"
 	conf "github.com/0xNF/glm/src/internal/conf"
 )
 
+// SendMail2 Sends mail via the configured settings
+func SendMail2(emailConf *conf.GLMEmail, msg string) error {
+	from := mail.Address{"GLM Monitor", emailConf.SenderAddress}
+    to   := mail.Address{"", emailConf.RecipientAddress}
+    subj := "GLM Found a Trigger File"
+    body := msg
 
-// validate checks that the email function can be properly executed
-func validate(token string, channel string, msg string) error {
-	if len(token) == 0 {
-		return errors.New("Slack Token must not be empty")
-	}
-	if len(channel) == 0 {
-		return errors.New("Slack Channel must not be empty")
-	}
-	if len(msg) == 0 {
-		return errors.New("Slack message must not be empty")
-	}
+    // Setup headers
+    headers := make(map[string]string)
+    headers["From"] = from.String()
+    headers["To"] = to.String()
+    headers["Subject"] = subj
+
+    // Setup message
+    message := ""
+    for k,v := range headers {
+        message += fmt.Sprintf("%s: %s\r\n", k, v)
+    }
+    message += "\r\n" + body
+
+    // Connect to the SMTP Server
+    servername := emailConf.SmtpServer
+
+    host, _, _ := net.SplitHostPort(servername)
+
+    auth := smtp.PlainAuth("", emailConf.User, emailConf.Password, host)
+
+    // TLS config
+    tlsconfig := &tls.Config {
+        InsecureSkipVerify: true,
+        ServerName: host,
+    }
+
+    // Here is the key, you need to call tls.Dial instead of smtp.Dial
+    // for smtp servers running on 465 that require an ssl connection
+    // from the very beginning (no starttls)
+    conn, err := tls.Dial("tcp", servername, tlsconfig)
+    if err != nil {
+        return err
+    }
+
+    c, err := smtp.NewClient(conn, host)
+    if err != nil {
+        return err
+    }
+
+    // Auth
+    if err = c.Auth(auth); err != nil {
+        return err
+    }
+
+    // To && From
+    if err = c.Mail(from.Address); err != nil {
+        return err
+    }
+
+    if err = c.Rcpt(to.Address); err != nil {
+        return err
+    }
+
+    // Data
+    w, err := c.Data()
+    if err != nil {
+        return err
+    }
+
+    _, err = w.Write([]byte(message))
+    if err != nil {
+        return err
+    }
+
+    err = w.Close()
+    if err != nil {
+        return err
+    }
+
+	c.Quit()
+	
 	return nil
-}
 
-
-// SendEmail sends a notification using the specified settings.
-// Returns an error if things go wrong.
-func SendEmail(emailConf *conf.GLMEmail, msg string) error {
-	if err := validate(slackConf.Token, slackConf.Channel, msg); err != nil {
-		return err
-	}
-
-	sl := &slack{
-		Token: slackConf.Token,
-		Channel: slackConf.Channel,
-		Text: msg,
-		Timeout: 30,
-	}
-	jobj, err := json.Marshal(sl)
-	if err != nil {
-		return err
-	}
-	os.Stdout.Write(jobj)
-	req, err := http.NewRequest("POST", slackApIURL, bytes.NewBuffer(jobj))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+slackConf.Token)
-
-	client := &http.Client{
-		Timeout: time.Duration(time.Duration(30) * time.Second),
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	resBody := string(bodyBytes)
-	if res.StatusCode != http.StatusOK {
-		return errors.New(string(res.StatusCode))
-	}
-	if strings.Contains(resBody, "\"ok\":false") {
-		return errors.New(resBody)
-	}
-	defer res.Body.Close()
-
-	return nil
 }

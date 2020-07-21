@@ -31,7 +31,7 @@ func main() {
 				}
 			}
 			if config.HasEmail {
-				err = notify.SendEmail(&config.Email, str)
+				err = notify.SendMail2(&config.Email, str)
 				if err != nil {
 					fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to send to email: %s", err))
 				}

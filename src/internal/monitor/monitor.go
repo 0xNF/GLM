@@ -16,7 +16,7 @@ func scanForTrigger(triggerFile string) (bool, error) {
 	return fsops.CheckExists(triggerFile)
 }
 
-// Monitors runs the main monitor logic
+// Monitor Monitors runs the main monitor logic
 func Monitor(trigger *conf.GLMTrigger) (bool, error) {
 	ret := false
 	files, err := findMatchingFiles(trigger)
@@ -36,15 +36,15 @@ func Monitor(trigger *conf.GLMTrigger) (bool, error) {
 	}
 	if found {
 		/* if so, preserve the files */
-		// if err = moveFilesToSaveLocation(trigger.SaveTo, files); err != nil {
-		// 	return ret, err
-		// }
+		if err = moveFilesToSaveLocation(trigger.SaveTo, files); err != nil {
+			return ret, err
+		}
 		ret = true
 	} else {
 		/* if not, delete the files */
-		// if err = deleteExcess(files); err != nil {
-		// 	return ret, err
-		// }
+		if err = deleteExcess(files); err != nil {
+			return ret, err
+		}
 	}
 	return ret, nil
 }
