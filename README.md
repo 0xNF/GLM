@@ -1,3 +1,5 @@
+![Go](https://github.com/0xNF/GLM/workflows/Go/badge.svg)
+
 # Gravio Log Monitor
 Small tool purpose-built to monitor iflab for ConigAccess errors
 
