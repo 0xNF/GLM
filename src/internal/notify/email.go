@@ -10,10 +10,9 @@ import (
 )
 
 // SendMail2 Sends mail via the configured settings
-func SendMail2(emailConf *conf.GLMEmail, msg string) error {
+func SendMail(emailConf *conf.GLMEmail, subj string, msg string) error {
 	from := mail.Address{"GLM Monitor", emailConf.SenderAddress}
     to   := mail.Address{"", emailConf.RecipientAddress}
-    subj := "GLM Found a Trigger File"
     body := msg
 
     // Setup headers

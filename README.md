@@ -12,6 +12,9 @@ Because the ConfigAccessDebug logs are so heavy, we can't keep too many of them 
 
 ## Configuration
 ```ini
+[General]
+	NotifyIfNothing = True
+	
 [Trigger]
 	TriggerFile = "/your/trigger/file.txt"
 	SaveFromFolder = "/folder/to/preserve/from"
@@ -19,17 +22,12 @@ Because the ConfigAccessDebug logs are so heavy, we can't keep too many of them 
 	SaveTo      = "/save/to/this/folder"
 
 [Email]
-	User       = "User"
-	SenderAddress = "glm@glm.invalid"
-	RecipientAddress = "webmaster@fixme.invald"
-	Password   = "YourPassword"
-	SmtpServer = "mail.fixme.invalid:465"
+	User       = email@localhost
+	Password   = YourPassword
+	SmtpServer = smtp.localhost:443
 
 [Slack]
 	Token   = YourSlackToken
-	Channel = `#you`
-
-
 ```
 # Installation
 

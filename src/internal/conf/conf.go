@@ -14,6 +14,7 @@ type GLMConfig struct {
 	Slack    GLMSlack
 	HasSlack bool
 	HasEmail bool
+	NotifyIfNothing bool
 }
 type GLMEmail struct {
 	User       string
@@ -41,6 +42,9 @@ func DoesConfigExist() (bool, error) {
 // MakeDefaultConfigFile writes default config file to "./glmconfig.ini"
 func MakeDefaultConfigFile() (*GLMConfig, error) {
 	cfg := ini.Empty()
+
+	/* write the General section */
+	cfg.Section("General").Key("NotifyIfNothing").SetValue("True")
 
 	/* write the GLM Trigger section */
 	trigger := &GLMTrigger{
@@ -109,6 +113,17 @@ func ReadConfigFile() (*GLMConfig, error) {
 	if err != nil {
 		return &GLMConfig{}, nil
 	}
+
+	/* load General section */
+	generalSec, err := inif.GetSection("General")
+	if err != nil {
+		return conf, errors.New("config file did not have a General section")
+	}
+	notifyIfNothing, err := generalSec.Key("NotifyIfNothing").Bool()
+	if err != nil {
+		return conf, errors.New("Failed to parse NotifyIfNothing config field. Must be either [True,False]")
+	}
+	conf.NotifyIfNothing = notifyIfNothing
 
 	/* load Trigger Section */
 	triggerSec, err := inif.GetSection("Trigger")
