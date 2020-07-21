@@ -22,12 +22,19 @@ func main() {
 		} else {
 			/* send notifications to the administrator */
 			log.Println(fmt.Sprintf("Trigger file (%s) was found. Moved affected files to safe loc (%s). Notifying administrator.", trigger.TriggerFile, trigger.SaveTo))
-			str := fmt.Sprintf("Trigger file (%s) was found. Moved affected files to safe location (%s).", trigger.TriggerFile, trigger.SaveTo)
+			str := fmt.Sprintf("GLM: Trigger file (%s) was found. Moved affected files to safe location (%s).", trigger.TriggerFile, trigger.SaveTo)
 			
-			/* check if Slack is defined */
-			err = notify.SendSlack("x", "y", str)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to send to slack: %s", err))
+			if config.HasSlack {
+				err = notify.SendSlack(&config.Slack, str)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to send to slack: %s", err))
+				}
+			}
+			if config.HasEmail {
+				err = notify.SendEmail(&config.Email, str)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to send to email: %s", err))
+				}
 			}
 		}
 	}

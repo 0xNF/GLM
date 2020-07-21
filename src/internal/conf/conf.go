@@ -3,6 +3,7 @@ package conf
 import (
 	fsops "github.com/0xNF/glm/src/internal/fsops"
 	"gopkg.in/ini.v1"
+	"errors"
 )
 
 const iniLoc string = "./glmconfig.ini"
@@ -11,6 +12,8 @@ type GLMConfig struct {
 	Triggers []GLMTrigger
 	Email    GLMEmail
 	Slack    GLMSlack
+	HasSlack bool
+	HasEmail bool
 }
 type GLMEmail struct {
 	User       string
@@ -28,7 +31,7 @@ type GLMTrigger struct {
 	SaveTo         string
 }
 
-// Checks whether the local config file exists
+// DoesConfigExist Checks whether the local config file exists
 func DoesConfigExist() (bool, error) {
 	return fsops.CheckExists(iniLoc)
 }
@@ -88,6 +91,12 @@ func MakeDefaultConfigFile() (*GLMConfig, error) {
 // Reads the config file located at "./glmconfig.ini"
 func ReadConfigFile() (*GLMConfig, error) {
 
+	/* create Conf */
+	conf := &GLMConfig{
+		HasEmail: false,
+		HasSlack: false,
+	}
+
 	/* load Config from disk */
 	inif, err := ini.LoadSources(ini.LoadOptions{
 		SkipUnrecognizableLines: true,
@@ -98,36 +107,42 @@ func ReadConfigFile() (*GLMConfig, error) {
 	}
 
 	/* load Trigger Section */
-	triggerSec := inif.Section("Trigger")
+	triggerSec, err := inif.GetSection("Trigger")
+	if err != nil {
+		return conf, errors.New("config file did not have a Trigger section")
+	}
 	trigger := &GLMTrigger{
 		TriggerFile:    triggerSec.Key("TriggerFile").String(),
 		SaveFromFolder: triggerSec.Key("SaveFromFolder").String(),
 		SavePattern:    triggerSec.Key("SavePattern").String(),
 		SaveTo:         triggerSec.Key("SaveTo").String(),
 	}
+	conf.Triggers = append(conf.Triggers, *trigger)
 
 	/* load Email Section */
-	emailSec := inif.Section("Email")
-	email := &GLMEmail{
-		User:       emailSec.Key("User").String(),
-		Password:   emailSec.Key("Password").String(),
-		SmtpServer: emailSec.Key("SmtpServer").String(),
+	emailSec, err := inif.GetSection("Email")
+	if err == nil {
+		email := &GLMEmail{
+			User:       emailSec.Key("User").String(),
+			Password:   emailSec.Key("Password").String(),
+			SmtpServer: emailSec.Key("SmtpServer").String(),
+		}
+		conf.Email = *email
+		conf.HasEmail = true
 	}
+
 
 	/* Load Slack Section */
-	slackSec := inif.Section("Slack")
-	slack := &GLMSlack{
-		Token:   slackSec.Key("Token").String(),
-		Channel: slackSec.Key("Channel").String(),
+	slackSec, err := inif.GetSection("Slack")
+	if err == nil {
+		slack := &GLMSlack{
+			Token:   slackSec.Key("Token").String(),
+			Channel: slackSec.Key("Channel").String(),
+		}
+		conf.Slack = *slack
+		conf.HasSlack = true
 	}
 
-	/* create Conf */
-	conf := &GLMConfig{
-		Triggers: []GLMTrigger{
-			*trigger,
-		},
-		Email: *email,
-		Slack: *slack,
-	}
+
 	return conf, nil
 }

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"time"
+	conf "github.com/0xNF/glm/src/internal/conf"
 )
 
 
@@ -26,7 +27,7 @@ func validate(token string, channel string, msg string) error {
 	return nil
 }
 
-type Slack struct {
+type slack struct {
 	Token   string `json:"-"`
 	Channel string `json:"channel"`
 	Text    string `json:"text"`
@@ -37,14 +38,14 @@ const slackApIURL = "https://slack.com/api/chat.postMessage"
 
 // SendSlack sends a notification using the specified settings.
 // Returns an error if things go wrong.
-func SendSlack(token string, channel string, msg string) error {
-	if err := validate(token, channel, msg); err != nil {
+func SendSlack(slackConf *conf.GLMSlack, msg string) error {
+	if err := validate(slackConf.Token, slackConf.Channel, msg); err != nil {
 		return err
 	}
 
-	sl := &Slack{
-		Token: token,
-		Channel: channel,
+	sl := &slack{
+		Token: slackConf.Token,
+		Channel: slackConf.Channel,
 		Text: msg,
 		Timeout: 30,
 	}
@@ -58,7 +59,7 @@ func SendSlack(token string, channel string, msg string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+slackConf.Token)
 
 	client := &http.Client{
 		Timeout: time.Duration(time.Duration(30) * time.Second),
